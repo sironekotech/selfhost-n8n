@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: "traefik"
+    image: "traefik:v2.10"
     restart: always
     command:
       - "--api.insecure=true"
@@ -27,7 +27,7 @@ services:
       - "127.0.0.1:5678:5678"
     labels:
       - traefik.enable=true
-      - traefik.http.routers.n8n.rule=Host(`${SUBDOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.n8n.rule=Host(`${SUBDOMAIN}.${DOMAIN_NAME}`) && !PathPrefix(`/google`)
       - traefik.http.routers.n8n.tls=true
       - traefik.http.routers.n8n.entrypoints=web,websecure
       - traefik.http.routers.n8n.tls.certresolver=mytlschallenge
@@ -40,6 +40,20 @@ services:
       - traefik.http.middlewares.n8n.headers.STSIncludeSubdomains=true
       - traefik.http.middlewares.n8n.headers.STSPreload=true
       - traefik.http.routers.n8n.middlewares=n8n@docker
+      - traefik.http.services.n8n.loadbalancer.server.port=5678
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.static.rule=Host(`${SUBDOMAIN}.${DOMAIN_NAME}`) && PathPrefix(`/google`)
+      - traefik.http.routers.static.tls=true
+      - traefik.http.routers.static.entrypoints=web,websecure
+      - traefik.http.routers.static.tls.certresolver=mytlschallenge
+      - traefik.http.services.static.loadbalancer.server.port=80
+    volumes:
+      - ./local-files:/usr/share/nginx/html
     environment:
       - N8N_HOST=${SUBDOMAIN}.${DOMAIN_NAME}
       - N8N_PORT=5678
