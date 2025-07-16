@@ -41,19 +41,6 @@ services:
       - traefik.http.middlewares.n8n.headers.STSPreload=true
       - traefik.http.routers.n8n.middlewares=n8n@docker
       - traefik.http.services.n8n.loadbalancer.server.port=5678
-
-  nginx:
-    image: nginx:alpine
-    restart: always
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.static.rule=Host(`${SUBDOMAIN}.${DOMAIN_NAME}`) && PathPrefix(`/google`)
-      - traefik.http.routers.static.tls=true
-      - traefik.http.routers.static.entrypoints=web,websecure
-      - traefik.http.routers.static.tls.certresolver=mytlschallenge
-      - traefik.http.services.static.loadbalancer.server.port=80
-    volumes:
-      - ./local-files:/usr/share/nginx/html
     environment:
       - N8N_HOST=${SUBDOMAIN}.${DOMAIN_NAME}
       - N8N_PORT=5678
@@ -67,6 +54,19 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
       - ./local-files:/home/node/.n8n/public
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.static.rule=Host(`${SUBDOMAIN}.${DOMAIN_NAME}`) && PathPrefix(`/google`)
+      - traefik.http.routers.static.tls=true
+      - traefik.http.routers.static.entrypoints=web,websecure
+      - traefik.http.routers.static.tls.certresolver=mytlschallenge
+      - traefik.http.services.static.loadbalancer.server.port=80
+    volumes:
+      - ./local-files:/usr/share/nginx/html
 
 volumes:
   n8n_data:
